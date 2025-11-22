@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+  timescaledb:
+    image: timescale/timescaledb-ha:pg15-latest
+    container_name: tsp_timescaledb
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${TSDB_USER:-tsp}
+      - POSTGRES_PASSWORD=${TSDB_PASSWORD:-tsp_pass}
+      - POSTGRES_DB=${TSDB_DB:-tsp}
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb-data:/var/lib/postgresql/data
+
+  pgvector:
+    image: ankane/pgvector:latest
+    container_name: tsp_pgvector
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${PGVECTOR_USER:-rag}
+      - POSTGRES_PASSWORD=${PGVECTOR_PASSWORD:-rag_pass}
+      - POSTGRES_DB=${PGVECTOR_DB:-rag}
+    ports:
+      - "6432:5432"
+    volumes:
+      - pgvector-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: tsp_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: tsp_mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: tsp_ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tsp_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: tsp_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  timescaledb-data:
+  pgvector-data:
+  ollama-data:
+  grafana-data:

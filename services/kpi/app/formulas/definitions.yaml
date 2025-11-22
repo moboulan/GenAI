@@ -29,3 +29,52 @@ kpis:
     expression: "2.0 - free_acidity.avg"
     required_tags:
       - free_acidity
+  - name: p2o5_quality_gap
+    label: Ecart qualite P2O5
+    unit: pct
+    default_window_minutes: 60
+    description: >-
+      Gap between the 46 pct P2O5 SE target from KPI 2025.xlsm and the averaged lab
+      measurement.
+    expression: "46 - p2o5_concentration.avg"
+    required_tags:
+      - p2o5_concentration
+  - name: acid_flow_deviation
+    label: Ecart debit acide
+    unit: t_h
+    default_window_minutes: 30
+    description: >-
+      Deviation of the acid feed from the 65 t/h nominal throughput used in the
+      rendement worksheet.
+    expression: "acid_flow.avg - 65"
+    required_tags:
+      - acid_flow
+  - name: reactor_temperature_spread
+    label: Ecart max reacteur
+    unit: C
+    default_window_minutes: 30
+    description: >-
+      Thermal bandwidth observed in the window; useful for detecting oscillations.
+    expression: "reactor_temperature.maximum - reactor_temperature.minimum"
+    required_tags:
+      - reactor_temperature
+  - name: free_acidity_excess
+    label: Excès acidite libre
+    unit: pct
+    default_window_minutes: 60
+    description: >-
+      Amount exceeding the 1.8 pct operating limit (never negative).
+    expression: "max(free_acidity.avg - 1.8, 0)"
+    required_tags:
+      - free_acidity
+  - name: recycle_ratio_alert
+    label: Alerte taux recycle
+    unit: pct
+    default_window_minutes: 30
+    description: >-
+      Ratio between recycle flow and acid throughput referenced in KPI 2025.xlsm;
+      raises visibility on blockages. Requires recycle instrumentation.
+    expression: "(recycle_rate.avg / acid_flow.avg) * 100"
+    required_tags:
+      - recycle_rate
+      - acid_flow

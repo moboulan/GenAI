@@ -76,7 +76,7 @@ def test_evaluate_formula_returns_value():
 	with SessionLocal() as session:
 		seed_measurements(session, now)
 
-	result = service.evaluate_formula("rendement", window_minutes=60)
+	result = service.evaluate_formula("rendement", window_minutes=60, reference_ts=now)
 	assert result["name"] == "rendement"
 	expected = (sum(P2O5_VALUES) / len(P2O5_VALUES)) / (sum(ACID_FLOW_VALUES) / len(ACID_FLOW_VALUES)) * 100
 	assert result["value"] == pytest.approx(expected, rel=1e-6)
@@ -86,7 +86,17 @@ def test_evaluate_formula_returns_value():
 def test_evaluate_formula_missing_tag_raises():
 	service, _ = build_service()
 	with pytest.raises(FormulaDataUnavailable):
-		service.evaluate_formula("reactor_thermal_gap", window_minutes=15)
+		service.evaluate_formula("recycle_ratio_alert", window_minutes=30)
+
+
+def test_reactor_gap_formula_uses_latest_value():
+	service, SessionLocal = build_service()
+	now = datetime(2025, 11, 22, 12, 0, tzinfo=timezone.utc)
+	with SessionLocal() as session:
+		seed_measurements(session, now)
+
+	result = service.evaluate_formula("reactor_thermal_gap", window_minutes=15, reference_ts=now)
+	assert result["value"] == pytest.approx(95.0 - 85.0)
 
 
 def test_trend_computation_highlights_direction():
@@ -95,7 +105,7 @@ def test_trend_computation_highlights_direction():
 	with SessionLocal() as session:
 		seed_measurements(session, now)
 
-	payload = service.trend("reactor_temperature", window_minutes=60)
+	payload = service.trend("reactor_temperature", window_minutes=60, reference_ts=now)
 	assert payload["direction"] == "up"
 	assert payload["delta"] > 0
 	assert payload["earliest_value"] < payload["latest_value"]
@@ -107,7 +117,7 @@ def test_anomaly_flags_large_z_score():
 	with SessionLocal() as session:
 		seed_measurements(session, now)
 
-	payload = service.anomaly("reactor_temperature", window_minutes=60, threshold=1.0)
+	payload = service.anomaly("reactor_temperature", window_minutes=60, threshold=1.0, reference_ts=now)
 	assert payload["is_anomaly"] is True
 	assert payload["z_score"] >= 1.0
 

@@ -1,0 +1,31 @@
+kpis:
+  - name: rendement
+    label: Rendement P2O5
+    unit: pct
+    default_window_minutes: 30
+    description: >-
+      Ratio of soluble P2O5 output versus acid feed flow; tracks instantaneous
+      production yield.
+    expression: "(p2o5_concentration.avg / acid_flow.avg) * 100"
+    required_tags:
+      - p2o5_concentration
+      - acid_flow
+  - name: reactor_thermal_gap
+    label: Ecart thermique reacteur
+    unit: C
+    default_window_minutes: 15
+    description: >-
+      Latest reactor temperature minus the nominal 85C target.
+    expression: "reactor_temperature.latest_value - 85"
+    required_tags:
+      - reactor_temperature
+  - name: free_acidity_margin
+    label: Marge acidite libre
+    unit: pct
+    default_window_minutes: 45
+    description: >-
+      Difference between the 2.0 pct ceiling and the average free acidity for the
+      window.
+    expression: "2.0 - free_acidity.avg"
+    required_tags:
+      - free_acidity

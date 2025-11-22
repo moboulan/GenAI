@@ -13,6 +13,7 @@ DEFAULT_FORMULA_PATH = BASE_DIR / "formulas" / "definitions.yaml"
 class Settings(BaseSettings):
     timescale_dsn: str = "postgresql+psycopg://tsp:tsp_pass@localhost:5432/tsp"
     formulas_path: Path = Field(default=DEFAULT_FORMULA_PATH)
+    anomaly_z_threshold: float = Field(default=2.5, gt=0)
 
     model_config = {
         "env_prefix": "KPI_",

@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -45,4 +47,7 @@ def test_aggregate_window_returns_stats():
     assert payload["maximum"] == 90.0
     assert payload["latest_value"] == 90.0
     assert payload["latest_ts"] == now - timedelta(minutes=5)
+    assert payload["earliest_value"] == 80.0
+    assert payload["earliest_ts"] == now - timedelta(minutes=10)
+    assert payload["stddev"] == pytest.approx(7.0710678118654755)
     assert payload["total_points"] == 2

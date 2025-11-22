@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from .config import get_settings
 from .formulas import FormulaDataUnavailable, FormulaEvaluationError, FormulaNotFound, FormulaRegistry
 from .models import Base
-from .schemas import FormulaComputation, FormulaMetadata, KpiResponse
-from .service import KpiService
+from .schemas import AnomalyResponse, FormulaComputation, FormulaMetadata, KpiResponse, TrendResponse
+from .service import KpiService, WindowEmptyError
 
 app = FastAPI(title="KPI Service")
 
@@ -30,7 +30,12 @@ def _get_formula_registry() -> FormulaRegistry:
 
 
 def get_service() -> KpiService:
-    return KpiService(_get_session_factory(), _get_formula_registry())
+    settings = get_settings()
+    return KpiService(
+        _get_session_factory(),
+        _get_formula_registry(),
+        anomaly_threshold=settings.anomaly_z_threshold,
+    )
 
 
 @app.get("/health")
@@ -69,3 +74,28 @@ def evaluate_formula(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except FormulaEvaluationError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/kpi/trend", response_model=TrendResponse)
+def get_trend(tag: str, window_minutes: int = 30, service: KpiService = Depends(get_service)) -> TrendResponse:
+    if window_minutes <= 0:
+        raise HTTPException(status_code=422, detail="window_minutes must be positive")
+    try:
+        return TrendResponse(**service.trend(tag=tag, window_minutes=window_minutes))
+    except WindowEmptyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/kpi/anomaly", response_model=AnomalyResponse)
+def get_anomaly(
+    tag: str,
+    window_minutes: int = 30,
+    threshold: float | None = None,
+    service: KpiService = Depends(get_service),
+) -> AnomalyResponse:
+    if window_minutes <= 0:
+        raise HTTPException(status_code=422, detail="window_minutes must be positive")
+    try:
+        return AnomalyResponse(**service.anomaly(tag=tag, window_minutes=window_minutes, threshold=threshold))
+    except WindowEmptyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

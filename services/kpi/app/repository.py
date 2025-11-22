@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+import statistics
+
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
@@ -10,6 +12,14 @@ from .models import Measurement
 
 def _window_filter(stmt: Select, tag: str, start_ts: datetime) -> Select:
     return stmt.where(Measurement.tag == tag).where(Measurement.ts >= start_ts)
+
+
+def _ensure_utc(dt: datetime | None) -> datetime | None:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def aggregate_window(
@@ -39,12 +49,18 @@ def aggregate_window(
     latest_stmt = _window_filter(latest_stmt, tag, start_ts)
     latest = session.execute(latest_stmt).first()
 
-    def _ensure_utc(dt: datetime | None) -> datetime | None:
-        if dt is None:
-            return None
-        if dt.tzinfo is None:
-            return dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(timezone.utc)
+    earliest_stmt = (
+        select(Measurement.value, Measurement.ts)
+        .order_by(Measurement.ts.asc())
+        .limit(1)
+    )
+    earliest_stmt = _window_filter(earliest_stmt, tag, start_ts)
+    earliest = session.execute(earliest_stmt).first()
+
+    values_stmt = select(Measurement.value)
+    values_stmt = _window_filter(values_stmt, tag, start_ts)
+    values = [row.value for row in session.execute(values_stmt)]
+    stddev = statistics.stdev(values) if len(values) >= 2 else None
 
     return {
         "tag": tag,
@@ -54,7 +70,10 @@ def aggregate_window(
         "avg": row.avg,
         "minimum": row.min,
         "maximum": row.max,
+        "stddev": stddev,
         "latest_value": latest.value if latest else None,
         "latest_ts": _ensure_utc(latest.ts if latest else None),
+        "earliest_value": earliest.value if earliest else None,
+        "earliest_ts": _ensure_utc(earliest.ts if earliest else None),
         "total_points": int(row.count or 0),
     }

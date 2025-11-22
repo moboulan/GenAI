@@ -1,0 +1,9 @@
+safety_notices:
+  - condition: "temperature > 80"
+    message: "Risque d'emballement thermique, limiter la montée en charge."
+  - condition: "rendement < 90"
+    message: "Rendement sous la cible, vérifier le taux de recyclage."
+recommendation_template:
+  impact: "Stabilise le procédé et améliore la qualité"
+  risks: "Peut dégrader le débit si mal appliqué"
+  prerequisites: "Coordonner avec l'équipe qualité"

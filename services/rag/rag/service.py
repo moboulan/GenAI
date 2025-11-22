@@ -18,8 +18,9 @@ from .models import Base, Chunk, Document
 
 @dataclass
 class SearchHit:
+    chunk_id: str
     document_id: str
-    content: str
+    text: str
     score: float
     metadata: dict
 
@@ -87,8 +88,9 @@ class RagService:
             score = _cosine_similarity(vector, embedding)
             hits.append(
                 SearchHit(
+                    chunk_id=chunk.id,
                     document_id=document.id,
-                    content=chunk.content,
+                    text=chunk.content,
                     score=float(score),
                     metadata={**document.metadata, **chunk.metadata},
                 )

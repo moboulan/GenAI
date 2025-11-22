@@ -32,4 +32,14 @@ def upsert_documents(payload: DocumentBatch, service: RagService = Depends(get_s
 @app.post("/search", response_model=SearchResponse)
 def search(payload: SearchRequest, service: RagService = Depends(get_service)) -> SearchResponse:
     results = service.search(payload.query, limit=payload.limit)
-    return SearchResponse.from_hits(results)
+    payload_hits = [
+        {
+            "chunk_id": hit.chunk_id,
+            "document_id": hit.document_id,
+            "text": hit.text,
+            "score": hit.score,
+            "metadata": hit.metadata,
+        }
+        for hit in results
+    ]
+    return SearchResponse.from_hits(payload_hits)

@@ -10,6 +10,9 @@ Holds configuration for Docker Compose, observability, and supporting services.
 - Mosquitto (MQTT bus)
 - Ollama (local LLM runtime)
 - Prometheus + Grafana (observability)
+- KPI API (FastAPI container)
+- RAG API (FastAPI container with sqlite volume)
+- Agent Orchestrator (FastAPI, depends on KPI/RAG)
 
 ## Usage
 

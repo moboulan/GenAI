@@ -36,12 +36,17 @@ class KpiClient:
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
 
-    async def fetch_formula(self, name: str, window: int = 30) -> dict[str, Any]:
+    async def fetch_formula(self, name: str, window: int = 30) -> dict[str, Any] | None:
         params = {"window": window}
         async with httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout) as client:
-            response = await client.get(f"/kpi/formulas/{name}", params=params)
-            response.raise_for_status()
-        return response.json()
+                response = await client.get(f"/kpi/formulas/{name}", params=params)
+                try:
+                    response.raise_for_status()
+                except httpx.HTTPStatusError as exc:
+                    if exc.response.status_code == 404:
+                    return None
+                    raise
+            return response.json()
 
     async def fetch_trend(self, tag: str, window: int = 30) -> dict[str, Any]:
         params = {"tag": tag, "window": window}

@@ -92,7 +92,7 @@ class RagService:
                     document_id=document.id,
                     text=chunk.content,
                     score=float(score),
-                    metadata={**document.metadata, **chunk.metadata},
+                    metadata={**(document.metadata_json or {}), **(chunk.metadata_json or {})},
                 )
             )
         hits.sort(key=lambda h: h.score, reverse=True)
@@ -116,7 +116,7 @@ class RagService:
         if document is None:
             document = Document(id=doc_id)
             session.add(document)
-        document.metadata = {**(document.metadata or {}), **metadata}
+        document.metadata_json = {**(document.metadata_json or {}), **metadata}
         document.source_path = metadata.get("source_path")
         document.source_type = metadata.get("kind", document.source_type or "inline")
         session.flush()
@@ -132,7 +132,7 @@ class RagService:
                     position=chunk.index,
                     content=chunk.content,
                     embedding=embedding,
-                    metadata={"chunk_index": chunk.index, **metadata},
+                    metadata_json={"chunk_index": chunk.index, **metadata},
                 )
             )
         return models

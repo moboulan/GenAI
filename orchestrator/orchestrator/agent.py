@@ -44,7 +44,8 @@ class AgentOrchestrator:
             rag_hits = await self.rag.search(request.message, limit=limit)
         if prediction.label in {"kpi", "mixed"} and prediction.kpi_name:
             kpi_payload = await self.kpi.fetch_formula(prediction.kpi_name)
-            kpi_payload["name"] = prediction.kpi_name
+            if kpi_payload is not None:
+                kpi_payload["name"] = prediction.kpi_name
 
         answer = self.llm.summarize(question=request.message, kpi=kpi_payload, hits=rag_hits)
         sources = _build_sources(rag_hits)

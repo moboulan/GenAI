@@ -1,9 +1,24 @@
 # Web UI
 
-React/Vite front end that hosts the chat interface, renders KPI charts, and plays scripted scenarios.
+React + Vite single-page app that hosts the chat interface, renders KPI/RAG answers from the orchestrator, and will later embed charts and scripted scenarios.
 
-## TODO
+## Getting Started
 
-- `src/components/Chat.tsx`: Streaming chat shell with citation callouts.
-- `src/components/Charts.tsx`: KPI/Trend visualizations fed by KPI API.
-- `scripts/scenarios/`: JSON definitions for demo walkthroughs.
+```bash
+cd ui
+npm install          # (or pnpm/yarn)
+cp .env.example .env # adjust VITE_ORCH_BASE_URL if needed
+npm run dev
+```
+
+By default the UI targets `http://localhost:8010/chat`, which is the orchestrator endpoint exposed by Docker Compose.
+
+## Structure
+
+| Path | Purpose |
+| --- | --- |
+| `src/components/Chat.tsx` | Stateful chat shell with input composer, cited sources, and recommendation list. |
+| `src/api/orchestrator.ts` | Thin client around the `/chat` endpoint with env-configurable base URL. |
+| `src/styles.css` | Minimal styling inspired by the design brief (chips, bubbles, footer). |
+
+Future work will add KPI charts, historical conversation playback, and scenario runners under `scripts/`.

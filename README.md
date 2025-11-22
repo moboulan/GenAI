@@ -15,6 +15,12 @@ This repository hosts the modular implementation of the fully local TSP conversa
 | `infra/` | Docker Compose stack, Makefile helpers, and ops scripts. |
 | `docs/` | Design notes, runbooks, and evaluation reports. |
 
+## Documentation
+
+- `docs/ARCHITECTURE.md` — overview of the full stack plus generated diagram.
+- `docs/RUN.md` — run book with the exact commands to start/seed/stop everything.
+- `docs/generate_architecture.py` — script that refreshes `docs/architecture.png` using matplotlib.
+
 ## Step-by-Step Build Order
 
 1. **Infra bootstrap** (`infra/`)

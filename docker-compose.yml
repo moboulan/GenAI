@@ -75,6 +75,34 @@ services:
     depends_on:
       - prometheus
 
+  kpi:
+    build:
+      context: ./services/kpi
+    container_name: tsp_kpi
+    restart: unless-stopped
+    environment:
+      - KPI_TIMESCALE_DSN=postgresql+psycopg://tsp:tsp_pass@timescaledb:5432/tsp
+    depends_on:
+      - timescaledb
+    ports:
+      - "8001:8000"
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+    container_name: tsp_orchestrator
+    restart: unless-stopped
+    environment:
+      - ORCH_RAG_BASE_URL=${ORCH_RAG_BASE_URL:-http://host.docker.internal:8002}
+      - ORCH_KPI_BASE_URL=http://kpi:8000
+      - ORCH_REQUEST_TIMEOUT=10
+    depends_on:
+      - kpi
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8010:8010"
+
 volumes:
   timescaledb-data:
   pgvector-data:
